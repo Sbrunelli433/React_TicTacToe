@@ -1,18 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-class Square extends React.Component {
-    render() {
-      return (
-          //when a Square is clicked, the onClick function provided by the Board is called
-        <button className="square" 
-        onClick={() => this.props.onClick()}
-        >
-          {this.props.value}
+
+function Square(props){
+    return(
+        //when a Square is clicked, the onClick function provided by the Board is called
+        <button className="square" onClick={props.onClick}>
+        {props.value}
         </button>
-      );
-    }
-  }
+    );
+}
+
   
   class Board extends React.Component {
     //using this constructor passes a prop to tell each square what to display
@@ -21,6 +19,8 @@ class Square extends React.Component {
         super(props);
         this.state = {
             squares: Array(9).fill(null),
+            //Taking turns functionality
+            xIsNext: true,
         };
     }
 
@@ -29,8 +29,16 @@ class Square extends React.Component {
         //calls .slice() to create a copy of the squares array to modify instead of modifying the existing array
         //this is immutability; makes "time travel" possible
         const squares = this.state.squares.slice();
-        squares[i] = 'X';
-        this.setState({squares: squares});
+        //check to see if there's a winner OR ignores a square that's already clicked
+        if (calculateWinner(squares) || squares[i]) {
+            return;
+        }
+        //this takes turns between X and O
+        squares[i] = this.state.xIsNext ? 'X' : 'O';
+        this.setState({
+            squares: squares,
+            xIsNext: !this.state.xIsNext,
+        });
     }
     ////puts numbers in each of the squares
     // renderSquare(i) {
@@ -46,7 +54,16 @@ class Square extends React.Component {
     }
   
     render() {
-      const status = 'Next player: X';
+        //this changes the text at the top of the board and alternates between X and O
+      const winner = calculateWinner(this.state.squares);
+      //creates the status variable
+      let status;
+      //displays text to show the winner
+      if(winner){
+          status = 'Winner: ' + winner;
+      } else {
+          status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      }
   
       return (
         <div>
@@ -94,3 +111,23 @@ class Square extends React.Component {
     document.getElementById('root')
   );
   
+//this helper function determines the winner
+  function calculateWinner(squares) {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
+  }
