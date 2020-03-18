@@ -5,23 +5,30 @@ import './index.css';
 function Square(props){
     return(
         //when a Square is clicked, the onClick function provided by the Board is called
-        <button className="square" onClick={props.onClick}>
+        //color the squares when a winner is declared
+        <button className={"square " + (props.isWinning ? "square--winning": null)}
+        onClick={props.onClick}>
           {props.value}
         </button>
       );
   }
 
   class Board extends React.Component {
+      //handleClick(i) takes the state of each square and stores them into the board component
+      //instead of storing them in the individual square components.
     renderSquare(i){
         return (
           //passes through props from the Game component
-          <Square 
+          <Square
+            isWinning={this.props.winningSquares.includes(i)}
+            key={"square " + i} 
             value={this.props.squares[i]}
             //function is called when a square is clicked
             onClick={() => this.props.onClick(i)}
           />
         );
       }
+      
   
     render() {
       return (
@@ -110,7 +117,8 @@ function Square(props){
             //key={move} assigns the sequential number of the move 
             //React never loses, destroys or confuses the history of the moves
             <li key={move}>
-            <button onClick={() => this.jumpTo(move)}>{desc}</button>
+            <button onClick={() => this.jumpTo(move)}>
+              {desc}</button>
           </li>
           );
       });
@@ -119,7 +127,9 @@ function Square(props){
       let status;
       //displays text to show the winner
       if(winner){
-        status = 'Winner: ' + winner;
+        status = 'Winner: ' + winner.player + " @ " + winner.line;
+      } else if (!current.squares.includes(null)){
+        status = "Draw!!";
       } else {
         status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
       }
@@ -128,6 +138,7 @@ function Square(props){
         <div className="game">
           <div className="game-board">
             <Board 
+            winningSquares={winner ? winner.line : []}
             //below the Board component's handleClick function is being controlled by the Game component
             squares={current.squares}
             onClick={(i) => this.handleClick(i)}
@@ -164,7 +175,8 @@ function Square(props){
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+      //returns the object containing the array of numbers that correspond with the winning squares
+        return {player: squares[a], line:[a,b,c]};
       }
     }
     return null;

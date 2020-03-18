@@ -48,3 +48,7 @@ ol, ul {
 .game-info {
   margin-left: 20px;
 }
+/*below is the css for highlighting the winning locations*/
+.square--winning{
+  background-color: orange;
+}
