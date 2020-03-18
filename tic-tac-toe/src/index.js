@@ -6,32 +6,22 @@ function Square(props){
     return(
         //when a Square is clicked, the onClick function provided by the Board is called
         <button className="square" onClick={props.onClick}>
-        {props.value}
+          {props.value}
         </button>
-    );
-}
+      );
+  }
 
-  
   class Board extends React.Component {
-    //using this constructor passes a prop to tell each square what to display
-    //This is Lifting State Up to the parent component
-    constructor(props){
-        super(props);
-        this.state = {
-            squares: Array(9).fill(null),
-            //Taking turns functionality
-            xIsNext: true,
-        };
-    }
     renderSquare(i){
         return (
           //passes through props from the Game component
-        <Square value={this.props.squares[i]}
-        //function is called when a square is clicked
-        onClick={() => this.props.onClick(i)}
-        />
+          <Square 
+            value={this.props.squares[i]}
+            //function is called when a square is clicked
+            onClick={() => this.props.onClick(i)}
+          />
         );
-    }
+      }
   
     render() {
       return (
@@ -64,15 +54,18 @@ function Square(props){
       super(props);
       this.state ={ 
         history: [{
-          squares: Array(9).fill(null),
+          squares: Array(9).fill(null)
         }],
-      xIsNext: true,
+        //stepNumber is the initial state for the Game
+        stepNumber:0,
+        xIsNext: true
     };
   }
 
   handleClick(i){
     //this is immutability; makes "time travel" possible
-    const history = this.state.history;
+    //history is changed to this so if we go back in time and make a diff move, it throws away all future moves previously made
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length -1];
     //calls .slice() to create a copy of the squares array to modify instead of modifying the existing array
     const squares = current.squares.slice();
@@ -83,29 +76,42 @@ function Square(props){
     //this takes turns between X and O
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
-      history:history.concat([{
+      history: history.concat([{
         squares: squares,
       }]),
-      xIsNext: !this.state.xIsNext,
+      stepNumber: history.length,
+      xIsNext: !this.state.xIsNext
+    });
+  }
+
+  //create jumpTo method
+  jumpTo(step){
+    this.setState({
+      //this updates the stepNumber to the step
+      stepNumber: step,
+      //sets xIsNext to true if the number we're changing stepNumber to is even
+      xIsNext:(step % 2) === 0
     });
   }
     
     render() {
       //Game component Render is given the history array. Current state of history and calculates the winner
       const history = this.state.history;
-      const current = history[history.length -1];
+      const current = history[this.state.stepNumber];
       //this changes the text at the top of the board and alternates between X and O
       const winner = calculateWinner(current.squares);
 
       //map over the history
-      const moves = history.map((step,move) => {
+      const moves = history.map((step, move) => {
         const desc = move ?
-          'Go to move #' + move:
+          'Go to move #' + move :
           'Go to game start';
-          return (
-            <li>
-              <button onclick={() => this.jumpTo(move)}>{desc}</button>
-            </li>
+        return (
+            //key={move} assigns the sequential number of the move 
+            //React never loses, destroys or confuses the history of the moves
+            <li key={move}>
+            <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          </li>
           );
       });
 
